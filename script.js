@@ -36,20 +36,20 @@ export function consentGiven() {
   sendEvent("consent_given");
 }
 
-export function questionShown(question_id) {
-  sendEvent("question_shown", { question_id });
+export function questionShown(id) {
+  sendEvent("question_shown", { id });
 }
 
-export function firstInteraction(question_id) {
-  sendEvent("first_interaction", { question_id });
+export function firstInteraction(id) {
+  sendEvent("first_interaction", { id });
 }
 
-export function inputChange(question_id, count) {
-  sendEvent("input_change", { question_id, count });
+export function inputChange(id, count) {
+  sendEvent("input_change", { id, count });
 }
 
-export function navNext(question_id) {
-  sendEvent("navigation_next", { question_id });
+export function navNext(id) {
+  sendEvent("navigation_next", { id });
 }
 
 // ---- FINAL SUBMIT ----
@@ -93,13 +93,13 @@ async function loadQuestions() {
 function showQuestion() {
   const q = questions[current];
 
-  questionText.textContent = q.text;
-  answerInput.value = responses[q.question_id] || "";
+  questionText.textContent = q.prompt;
+  answerInput.value = responses[q.id] || "";
 
   inputCount = 0;
   hasInteracted = false;
 
-  questionShown(q.question_id);
+  questionShown(q.id);
 }
 
 // Input handling
@@ -109,18 +109,18 @@ answerInput.addEventListener("input", () => {
 
   if (!hasInteracted) {
     hasInteracted = true;
-    firstInteraction(q.question_id);
+    firstInteraction(q.id);
   }
 
-  inputChange(q.question_id, inputCount);
+  inputChange(q.id, inputCount);
 });
 
 // Next button
 nextBtn.addEventListener("click", () => {
   const q = questions[current];
-  responses[q.question_id] = answerInput.value;
+  responses[q.id] = answerInput.value;
 
-  navNext(q.question_id);
+  navNext(q.id);
 
   current++;
   if (current < questions.length) {
