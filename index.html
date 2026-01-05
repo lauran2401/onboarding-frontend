@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Onboarding</title>
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 1.25rem;
+      background: #fafafa;
+      color: #111;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    .consent {
+      border: 1px solid #ddd;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      background: #fff;
+    }
+
+    button {
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Project Onboarding</h1>
+
+    <p>
+      This is a short guided reflection. It is not an application or evaluation.
+      Your responses are used for research purposes only.
+    </p>
+
+    <p>
+      Estimated time: 10–15 minutes.
+    </p>
+
+    <div class="consent">
+      <p>
+        By continuing, you consent to anonymous interaction data and responses
+        being collected for research. No personal identifiers are required.
+      </p>
+
+      <label>
+        <input type="checkbox" id="consentCheckbox" />
+        I understand and consent to participate.
+      </label>
+      <br /><br />
+      <button id="startBtn" disabled>Begin</button>
+    </div>
+
+    <div id="questionArea" class="hidden">
+      <p id="questionText"></p>
+      <textarea id="answerInput"></textarea>
+      <br /><br />
+      <button id="nextBtn">Next</button>
+    </div>
+
+    <div id="doneArea" class="hidden">
+      <p>Thank you. Your responses have been recorded.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      consentGiven,
+      questionShown,
+      firstInteraction,
+      inputChange,
+      navNext,
+      submitResponses
+    } from "./script.js";
+
+    const questions = [
+      { id: "q1", text: "What brings you to this project?" },
+      { id: "q2", text: "How do you currently use AI tools?" },
+      { id: "q3", text: "What do you find most frustrating or limiting?" }
+    ];
+
+    let current = 0;
+    const responses = {};
+    let inputCount = 0;
+    let hasInteracted = false;
+
+    const consentCheckbox = document.getElementById("consentCheckbox");
+    const startBtn = document.getElementById("startBtn");
+    const questionArea = document.getElementById("questionArea");
+    const questionText = document.getElementById("questionText");
+    const answerInput = document.getElementById("answerInput");
+    const nextBtn = document.getElementById("nextBtn");
+    const doneArea = document.getElementById("doneArea");
+
+    consentCheckbox.addEventListener("change", () => {
+      startBtn.disabled = !consentCheckbox.checked;
+    });
+
+    startBtn.addEventListener("click", () => {
+      consentGiven();
+      document.querySelector(".consent").classList.add("hidden");
+      questionArea.classList.remove("hidden");
+      showQuestion();
+    });
+
+    function showQuestion() {
+      const q = questions[current];
+      questionText.textContent = q.text;
+      answerInput.value = responses[q.id] || "";
+      inputCount = 0;
+      hasInteracted = false;
+      questionShown(q.id);
+    }
+
+    answerInput.addEventListener("input", () => {
+      inputCount++;
+      const q = questions[current];
+
+      if (!hasInteracted) {
+        hasInteracted = true;
+        firstInteraction(q.id);
+      }
+
+      inputChange(q.id, inputCount);
+    });
+
+    nextBtn.addEventListener("click", () => {
+      const q = questions[current];
+      responses[q.id] = answerInput.value;
+      navNext(q.id);
+
+      current++;
+      if (current < questions.length) {
+        showQuestion();
+      } else {
+        questionArea.classList.add("hidden");
+        doneArea.classList.remove("hidden");
+        submitResponses(responses);
+      }
+    });
+  </script>
+</body>
+</html>
