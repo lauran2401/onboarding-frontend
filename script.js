@@ -3,11 +3,12 @@
 // Research instrument only. No analytics. No inference.
 
 // ---- CONFIG ----
-const WORKER_URL = "https://onboarding-backend.lauran2401.workers.dev";
+const WORKER_URL = "https://onboarding-logger.lauran2401.workers.dev";
 
 // ---- SESSION ----
 const session_id = crypto.randomUUID();
 const session_start_time = Date.now();
+
 
 // ---- LOW-LEVEL SEND ----
 async function sendEvent(event_type, data = {}) {
