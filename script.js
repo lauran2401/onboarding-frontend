@@ -1,6 +1,6 @@
 // script.js
-// Frontend event emitter for research onboarding
-// No analytics. No inference. Raw interaction capture only.
+// Frontend event emitter + question loader
+// Research instrument only. No analytics. No inference.
 
 // ---- CONFIG ----
 const WORKER_URL = "https://onboarding-backend.lauran2401.workers.dev";
@@ -24,7 +24,7 @@ async function sendEvent(event_type, data = {}) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-  } catch (e) {
+  } catch (_) {
     // Silent by design
   }
 }
@@ -52,14 +52,6 @@ export function navNext(question_id) {
   sendEvent("navigation_next", { question_id });
 }
 
-export function navBack(question_id) {
-  sendEvent("navigation_back", { question_id });
-}
-
-export function idleGap(ms) {
-  sendEvent("idle_gap", { value: ms });
-}
-
 // ---- FINAL SUBMIT ----
 export async function submitResponses(responses) {
   sendEvent("submit");
@@ -76,3 +68,71 @@ export async function submitResponses(responses) {
     })
   });
 }
+
+// ---- QUESTION FLOW ----
+let questions = [];
+let current = 0;
+const responses = {};
+let inputCount = 0;
+let hasInteracted = false;
+
+// DOM refs (pulled from index.html)
+const questionText = document.getElementById("questionText");
+const answerInput = document.getElementById("answerInput");
+const questionArea = document.getElementById("questionArea");
+const doneArea = document.getElementById("doneArea");
+const nextBtn = document.getElementById("nextBtn");
+
+// Load questions.json
+async function loadQuestions() {
+  const res = await fetch("./questions.json");
+  questions = await res.json();
+}
+
+// Show current question
+function showQuestion() {
+  const q = questions[current];
+
+  questionText.textContent = q.text;
+  answerInput.value = responses[q.question_id] || "";
+
+  inputCount = 0;
+  hasInteracted = false;
+
+  questionShown(q.question_id);
+}
+
+// Input handling
+answerInput.addEventListener("input", () => {
+  const q = questions[current];
+  inputCount++;
+
+  if (!hasInteracted) {
+    hasInteracted = true;
+    firstInteraction(q.question_id);
+  }
+
+  inputChange(q.question_id, inputCount);
+});
+
+// Next button
+nextBtn.addEventListener("click", () => {
+  const q = questions[current];
+  responses[q.question_id] = answerInput.value;
+
+  navNext(q.question_id);
+
+  current++;
+  if (current < questions.length) {
+    showQuestion();
+  } else {
+    questionArea.classList.add("hidden");
+    doneArea.classList.remove("hidden");
+    submitResponses(responses);
+  }
+});
+
+// ---- INIT ----
+loadQuestions().then(() => {
+  // Questions load only after consent flow triggers showQuestion()
+});
